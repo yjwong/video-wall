@@ -1,0 +1,12 @@
+hikvision:
+  host: 
+  username: 
+  password: 
+
+rtsp_server:
+  port: 63000
+  mount_point: /stream
+
+canvas:
+  width: 1920
+  height: 1080
