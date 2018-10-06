@@ -20,13 +20,18 @@ class CameraVideoSource:
         self.rtspsrc.set_property("timeout", 0)
         self.rtspsrc.set_property("user-id", self.rtsp_username)
         self.rtspsrc.set_property("user-pw", self.rtsp_password)
+        self.rtspsrc.set_property("drop-on-latency", True)
+        self.rtspsrc.set_property("latency", 200)
 
         self.rtph264depay = Gst.ElementFactory.make("rtph264depay", "camera_%d_rtph264depay" % (camera_id))
 
         self.h264parse = Gst.ElementFactory.make("h264parse", "camera_%d_h264parse" % (camera_id))
         self.h264parse.set_property("config-interval", -1)
 
-        self.vaapidecodebin = Gst.ElementFactory.make("vaapidecodebin", "camera_%d_vaapidecodebin" % (camera_id))
+        self.vaapih264dec = Gst.ElementFactory.make("vaapih264dec", "camera_%d_vaapih264dec" % (camera_id))
+        self.vaapih264dec.set_property("low-latency", True)
+
+        self.vaapipostproc = Gst.ElementFactory.make("vaapipostproc", "camera_%d_vaapipostproc" % (camera_id))
 
         self.glupload = Gst.ElementFactory.make("glupload", "camera_%d_glupload" % (camera_id))
 
@@ -71,17 +76,20 @@ class CameraVideoSource:
         # Hook the new pipeline in.
         self.bin.add(self.rtph264depay)
         self.bin.add(self.h264parse)
-        self.bin.add(self.vaapidecodebin)
+        self.bin.add(self.vaapih264dec)
+        self.bin.add(self.vaapipostproc)
 
         self.rtspsrc.link(self.rtph264depay)
         self.rtph264depay.link(self.h264parse)
-        self.h264parse.link(self.vaapidecodebin)
-        self.vaapidecodebin.link(self.glupload)
+        self.h264parse.link(self.vaapih264dec)
+        self.vaapih264dec.link(self.vaapipostproc)
+        self.vaapipostproc.link(self.glupload)
 
         # Make sure the elements are in the right state.
         self.rtph264depay.sync_state_with_parent()
         self.h264parse.sync_state_with_parent()
-        self.vaapidecodebin.sync_state_with_parent()
+        self.vaapih264dec.sync_state_with_parent()
+        self.vaapipostproc.sync_state_with_parent()
 
         return Gst.PadProbeReturn.OK
 
