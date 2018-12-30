@@ -21,7 +21,7 @@ class CameraVideoSource:
         self.rtspsrc.set_property("user-id", self.rtsp_username)
         self.rtspsrc.set_property("user-pw", self.rtsp_password)
         self.rtspsrc.set_property("drop-on-latency", True)
-        self.rtspsrc.set_property("latency", 200)
+        self.rtspsrc.set_property("latency", 0)
 
         self.rtph264depay = Gst.ElementFactory.make("rtph264depay", "camera_%d_rtph264depay" % (camera_id))
 
