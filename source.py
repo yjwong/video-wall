@@ -22,6 +22,9 @@ class CameraVideoSource:
         self.rtspsrc.set_property("user-pw", self.rtsp_password)
         self.rtspsrc.set_property("drop-on-latency", True)
         self.rtspsrc.set_property("latency", 0)
+        self.rtspsrc.set_property("protocols", "tcp")
+
+        self.queue = Gst.ElementFactory.make("queue", "camera_%d_queue" % (camera_id))
 
         self.rtph264depay = Gst.ElementFactory.make("rtph264depay", "camera_%d_rtph264depay" % (camera_id))
 
@@ -74,18 +77,21 @@ class CameraVideoSource:
         pad.remove_probe(info.id)
 
         # Hook the new pipeline in.
+        self.bin.add(self.queue)
         self.bin.add(self.rtph264depay)
         self.bin.add(self.h264parse)
         self.bin.add(self.vaapih264dec)
         self.bin.add(self.vaapipostproc)
 
-        self.rtspsrc.link(self.rtph264depay)
+        self.rtspsrc.link(self.queue)
+        self.queue.link(self.rtph264depay)
         self.rtph264depay.link(self.h264parse)
         self.h264parse.link(self.vaapih264dec)
         self.vaapih264dec.link(self.vaapipostproc)
         self.vaapipostproc.link(self.glupload)
 
         # Make sure the elements are in the right state.
+        self.queue.sync_state_with_parent()
         self.rtph264depay.sync_state_with_parent()
         self.h264parse.sync_state_with_parent()
         self.vaapih264dec.sync_state_with_parent()
