@@ -71,6 +71,7 @@ class CameraVideoSource:
     def on_rtspsrc_pad_blocked(self, pad, info):
         # Stop gltestsrc in preparation for disconnection from glupload.
         self.gltestsrc.set_state(Gst.State.NULL)
+        self.gltestsrc.unlink(self.glupload)
         self.bin.remove(self.gltestsrc)
 
         # Remove the probe.
