@@ -1,4 +1,5 @@
 import math
+import time
 
 import gi
 
@@ -21,7 +22,7 @@ class CameraVideoSource:
         self.rtspsrc.set_property("user-id", self.rtsp_username)
         self.rtspsrc.set_property("user-pw", self.rtsp_password)
         self.rtspsrc.set_property("drop-on-latency", True)
-        self.rtspsrc.set_property("latency", 0)
+        self.rtspsrc.set_property("latency", 200)
         self.rtspsrc.set_property("protocols", "tcp")
 
         self.queue = Gst.ElementFactory.make("queue", "camera_%d_queue" % (camera_id))
@@ -69,6 +70,8 @@ class CameraVideoSource:
         pad.add_probe(Gst.PadProbeType.BLOCK_DOWNSTREAM, self.on_rtspsrc_pad_blocked)
     
     def on_rtspsrc_pad_blocked(self, pad, info):
+        time.sleep(0.5)
+
         # Stop gltestsrc in preparation for disconnection from glupload.
         self.gltestsrc.set_state(Gst.State.NULL)
         self.gltestsrc.unlink(self.glupload)
